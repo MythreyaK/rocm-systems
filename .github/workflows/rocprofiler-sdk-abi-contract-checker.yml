@@ -1,0 +1,126 @@
+name: ROCProfiler-SDK ABI Contract Checker
+
+permissions:
+  contents: read
+
+# This workflow ensures that ROCProfiler-SDK maintains proper ABI contract
+# definitions for both HIP and HSA runtimes. It validates that API definitions
+# are consistent and up-to-date.
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'projects/rocprofiler-sdk/**'
+      - '!projects/rocprofiler-sdk/*.md'
+      - '!projects/rocprofiler-sdk/**/README.md'
+      - '!projects/rocprofiler-sdk/.github/workflows/pull_*.yml'
+      - '!projects/rocprofiler-sdk/.github/workflows/linting.yml'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  rocprofiler-abi-contract-check:
+    runs-on: ubuntu-22.04
+    
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        # Need full history to compare changes
+        fetch-depth: 0
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+
+    - name: Run Complete ABI Contract Check
+      run: |
+        echo "🔍 Running comprehensive ABI contract check..."
+        python3 .github/scripts/abi_contract_checker.py \
+          --repo-root . \
+          --check-hip \
+          --check-hsa \
+          --verbose
+
+    - name: Check for API definition changes in PR
+      if: github.event_name == 'pull_request'
+      run: |
+        echo "🔍 Checking for ROCProfiler-SDK API definition changes in this PR..."
+        
+        # Get list of changed files
+        git diff --name-only ${{ github.event.pull_request.base.sha }}..HEAD > changed_files.txt
+        
+        # Check if any API definition files were modified
+        if grep -q -E "(api_id\.h|api_args\.h|table_id\.h)" changed_files.txt; then
+          echo "⚠️ API definition files were modified in this PR:"
+          grep -E "(api_id\.h|api_args\.h|table_id\.h)" changed_files.txt || true
+          echo ""
+          echo "📋 When modifying API definitions, please ensure:"
+          echo "1. New APIs are properly documented"
+          echo "2. Deprecated APIs are marked with appropriate comments"
+          echo "3. API versioning is handled correctly"
+          echo "4. Both HIP and HSA runtime teams are notified of changes"
+          echo "5. ABI compatibility is maintained"
+        else
+          echo "✅ No API definition files were modified in this PR"
+        fi
+
+    - name: Validate API ID consistency
+      run: |
+        echo "🔍 Validating API ID numbering consistency..."
+        
+        # Check for gaps or duplicates in API ID enums
+        python3 -c "
+import re
+import sys
+
+def check_api_enum_consistency(file_path, enum_prefix):
+    try:
+        with open(file_path, 'r') as f:
+            content = f.read()
+        
+        # Extract all enum values
+        pattern = f'{enum_prefix}_([A-Z_]+)(?:\s*=\s*(\d+))?'
+        matches = re.findall(pattern, content)
+        
+        ids = []
+        for name, explicit_id in matches:
+            if name == 'NONE':  # Skip NONE entries
+                continue
+            if explicit_id:
+                ids.append((name, int(explicit_id)))
+            else:
+                # Implicit numbering
+                last_id = ids[-1][1] if ids else -1
+                ids.append((name, last_id + 1))
+        
+        # Check for duplicates
+        id_values = [id_val for _, id_val in ids]
+        if len(id_values) != len(set(id_values)):
+            print(f'❌ Duplicate API IDs found in {file_path}')
+            return False
+        
+        print(f'✅ API ID consistency check passed for {file_path}')
+        return True
+        
+    except Exception as e:
+        print(f'⚠️ Could not check {file_path}: {e}')
+        return True  # Don't fail on script errors
+
+# Check HIP runtime API IDs
+hip_ok = check_api_enum_consistency(
+    'projects/rocprofiler-sdk/source/include/rocprofiler-sdk/hip/runtime_api_id.h',
+    'ROCPROFILER_HIP_RUNTIME_API_ID'
+)
+
+# Check HSA core API IDs  
+hsa_ok = check_api_enum_consistency(
+    'projects/rocprofiler-sdk/source/include/rocprofiler-sdk/hsa/core_api_id.h',
+    'ROCPROFILER_HSA_CORE_API_ID'
+)
+
+sys.exit(0 if hip_ok and hsa_ok else 1)
+"

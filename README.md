@@ -46,6 +46,21 @@ Note TheRock CI performs multi-component testing on top of builds leveraging [Th
 
 [![The Rock CI](https://github.com/ROCm/rocm-systems/actions/workflows/therock-ci.yml/badge.svg?branch%3Adevelop+event%3Apush)](https://github.com/ROCm/rocm-systems/actions/workflows/therock-ci.yml?query=branch%3Adevelop+event%3Apush)
 
+# ABI Contract Checking
+
+This repository includes automated ABI contract checking to ensure that HIP and HSA runtimes maintain compatibility with ROCProfiler-SDK. The system validates:
+
+- **API Consistency**: New runtime APIs are properly tracked in rocprofiler-sdk
+- **Deprecation Process**: Deprecated APIs follow proper lifecycle management  
+- **ABI Stability**: Changes maintain binary compatibility requirements
+
+See [ABI Contract Checking Documentation](docs/abi-contract-checking.md) for details.
+
+**Workflows:**
+- [![HIP ABI Contract](https://github.com/ROCm/rocm-systems/actions/workflows/hip-abi-contract-checker.yml/badge.svg)](https://github.com/ROCm/rocm-systems/actions/workflows/hip-abi-contract-checker.yml)
+- [![HSA ABI Contract](https://github.com/ROCm/rocm-systems/actions/workflows/hsa-abi-contract-checker.yml/badge.svg)](https://github.com/ROCm/rocm-systems/actions/workflows/hsa-abi-contract-checker.yml) 
+- [![ROCProfiler-SDK ABI Contract](https://github.com/ROCm/rocm-systems/actions/workflows/rocprofiler-sdk-abi-contract-checker.yml/badge.svg)](https://github.com/ROCm/rocm-systems/actions/workflows/rocprofiler-sdk-abi-contract-checker.yml)
+
 ---
 
 ## Nomenclature
