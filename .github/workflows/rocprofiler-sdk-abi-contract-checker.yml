@@ -24,7 +24,7 @@ concurrency:
 jobs:
   rocprofiler-abi-contract-check:
     runs-on: ubuntu-22.04
-    
+
     steps:
     - uses: actions/checkout@v4
       with:
@@ -49,10 +49,10 @@ jobs:
       if: github.event_name == 'pull_request'
       run: |
         echo "🔍 Checking for ROCProfiler-SDK API definition changes in this PR..."
-        
+
         # Get list of changed files
         git diff --name-only ${{ github.event.pull_request.base.sha }}..HEAD > changed_files.txt
-        
+
         # Check if any API definition files were modified
         if grep -q -E "(api_id\.h|api_args\.h|table_id\.h)" changed_files.txt; then
           echo "⚠️ API definition files were modified in this PR:"
@@ -71,7 +71,7 @@ jobs:
     - name: Validate API ID consistency
       run: |
         echo "🔍 Validating API ID numbering consistency..."
-        
+
         # Check for gaps or duplicates in API ID enums
         python3 -c "
 import re
@@ -81,11 +81,11 @@ def check_api_enum_consistency(file_path, enum_prefix):
     try:
         with open(file_path, 'r') as f:
             content = f.read()
-        
+
         # Extract all enum values
         pattern = f'{enum_prefix}_([A-Z_]+)(?:\s*=\s*(\d+))?'
         matches = re.findall(pattern, content)
-        
+
         ids = []
         for name, explicit_id in matches:
             if name == 'NONE':  # Skip NONE entries
@@ -96,16 +96,16 @@ def check_api_enum_consistency(file_path, enum_prefix):
                 # Implicit numbering
                 last_id = ids[-1][1] if ids else -1
                 ids.append((name, last_id + 1))
-        
+
         # Check for duplicates
         id_values = [id_val for _, id_val in ids]
         if len(id_values) != len(set(id_values)):
             print(f'❌ Duplicate API IDs found in {file_path}')
             return False
-        
+
         print(f'✅ API ID consistency check passed for {file_path}')
         return True
-        
+
     except Exception as e:
         print(f'⚠️ Could not check {file_path}: {e}')
         return True  # Don't fail on script errors
@@ -116,7 +116,7 @@ hip_ok = check_api_enum_consistency(
     'ROCPROFILER_HIP_RUNTIME_API_ID'
 )
 
-# Check HSA core API IDs  
+# Check HSA core API IDs
 hsa_ok = check_api_enum_consistency(
     'projects/rocprofiler-sdk/source/include/rocprofiler-sdk/hsa/core_api_id.h',
     'ROCPROFILER_HSA_CORE_API_ID'
