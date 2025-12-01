@@ -1,0 +1,12 @@
+#
+#
+#   Installation of public Vulkan headers
+#
+#
+set(ROCPROFILER_VULKAN_HEADER_FILES api_args.h api_id.h compiler_api_id.h runtime_api_id.h
+                                 table_id.h)
+
+install(
+    FILES ${ROCPROFILER_VULKAN_HEADER_FILES}
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/rocprofiler-sdk/vulkan
+    COMPONENT development)

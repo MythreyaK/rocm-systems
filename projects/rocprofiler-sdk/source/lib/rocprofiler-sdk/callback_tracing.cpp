@@ -37,6 +37,7 @@
 #include "lib/rocprofiler-sdk/rocdecode/rocdecode.hpp"
 #include "lib/rocprofiler-sdk/rocjpeg/rocjpeg.hpp"
 #include "lib/rocprofiler-sdk/runtime_initialization.hpp"
+#include "lib/rocprofiler-sdk/vulkan/vulkan.hpp"
 
 #include <rocprofiler-sdk/callback_tracing.h>
 #include <rocprofiler-sdk/fwd.h>
@@ -46,6 +47,7 @@
 #include <rocprofiler-sdk/rccl/table_id.h>
 #include <rocprofiler-sdk/rocdecode/table_id.h>
 #include <rocprofiler-sdk/rocjpeg/table_id.h>
+#include <rocprofiler-sdk/vulkan/table_id.h>
 
 #include <atomic>
 #include <cstdint>
@@ -96,6 +98,7 @@ ROCPROFILER_CALLBACK_TRACING_KIND_STRING(ROCDECODE_API)
 ROCPROFILER_CALLBACK_TRACING_KIND_STRING(ROCJPEG_API)
 ROCPROFILER_CALLBACK_TRACING_KIND_STRING(HIP_STREAM)
 ROCPROFILER_CALLBACK_TRACING_KIND_STRING(MARKER_CORE_RANGE_API)
+ROCPROFILER_CALLBACK_TRACING_KIND_STRING(VULKAN_API)
 
 template <size_t Idx, size_t... Tail>
 std::pair<const char*, size_t>
@@ -301,6 +304,11 @@ rocprofiler_query_callback_tracing_kind_operation_name(rocprofiler_callback_trac
                 operation);
             break;
         }
+        case ROCPROFILER_CALLBACK_TRACING_VULKAN_API:
+        {
+            val = rocprofiler::vulkan::name_by_id<ROCPROFILER_VULKAN_TABLE_ID>(operation);
+            break;
+        }
     };
 
     if(!val)
@@ -448,6 +456,11 @@ rocprofiler_iterate_callback_tracing_kind_operations(
         case ROCPROFILER_CALLBACK_TRACING_MARKER_CORE_RANGE_API:
         {
             ops = rocprofiler::marker::get_ids<ROCPROFILER_MARKER_TABLE_ID_RoctxCoreRange>();
+            break;
+        }
+        case ROCPROFILER_CALLBACK_TRACING_VULKAN_API:
+        {
+            ops = rocprofiler::vulkan::get_ids<ROCPROFILER_VULKAN_TABLE_ID>();
             break;
         }
     };
@@ -606,6 +619,7 @@ rocprofiler_iterate_callback_tracing_kind_operation_args(
         case ROCPROFILER_CALLBACK_TRACING_RUNTIME_INITIALIZATION:
         case ROCPROFILER_CALLBACK_TRACING_ROCJPEG_API:
         case ROCPROFILER_CALLBACK_TRACING_HIP_STREAM:
+        case ROCPROFILER_CALLBACK_TRACING_VULKAN_API:
         {
             return ROCPROFILER_STATUS_ERROR_NOT_IMPLEMENTED;
         }

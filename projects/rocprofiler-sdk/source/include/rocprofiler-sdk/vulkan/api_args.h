@@ -20,35 +20,4 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#pragma once
-
-#include <string_view>
-
-enum class domain_type
-{
-    HSA = 0,
-    HIP,
-    MARKER,
-    KERNEL_DISPATCH,
-    MEMORY_COPY,
-    SCRATCH_MEMORY,
-    COUNTER_COLLECTION,
-    RCCL,
-    MEMORY_ALLOCATION,
-    COUNTER_VALUES,
-    PC_SAMPLING_HOST_TRAP,
-    ROCDECODE,
-    ROCJPEG,
-    PC_SAMPLING_STOCHASTIC,
-    VULKAN,
-    LAST,
-};
-
-std::string_view
-get_domain_trace_file_name(domain_type val);
-
-std::string_view
-get_domain_stats_file_name(domain_type val);
-
-std::string_view
-get_domain_column_name(domain_type _buffer_type);
+#include <rocprofiler-sdk/vulkan/core_10_api_args.h>

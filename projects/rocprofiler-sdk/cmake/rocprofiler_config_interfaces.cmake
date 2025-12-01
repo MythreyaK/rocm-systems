@@ -389,3 +389,18 @@ else()
                                INTERFACE ROCPROFILER_SDK_USE_SYSTEM_ROCJPEG=0)
 
 endif()
+
+# ----------------------------------------------------------------------------------------#
+#
+# vulkan
+#
+# ----------------------------------------------------------------------------------------#
+
+find_package(Vulkan REQUIRED)
+
+if(Vulkan_FOUND)
+    message(STATUS "Found Vulkan ${Vulkan_VERSION}.")
+    rocprofiler_config_nolink_target(rocprofiler-sdk-vulkan-nolink Vulkan::Headers)
+else()
+    message(WARNING "Vulkan not found")
+endif()

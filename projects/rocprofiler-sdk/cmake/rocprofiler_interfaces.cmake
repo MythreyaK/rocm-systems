@@ -109,3 +109,6 @@ rocprofiler_add_nolink_interface_library(
 rocprofiler_add_nolink_interface_library(
     rocprofiler-sdk-rocjpeg-nolink "ROCJPEG headers without linking to ROCJPEG library"
     IMPORTED)
+rocprofiler_add_nolink_interface_library(
+    rocprofiler-sdk-vulkan-nolink "Vulkan headers without linking to Vulkan library"
+    IMPORTED)

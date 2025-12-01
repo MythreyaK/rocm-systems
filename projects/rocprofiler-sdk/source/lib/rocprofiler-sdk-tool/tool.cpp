@@ -199,11 +199,12 @@ struct buffer_ids
     rocprofiler_buffer_id_t pc_sampling_host_trap   = {};
     rocprofiler_buffer_id_t rocdecode_api_trace     = {};
     rocprofiler_buffer_id_t rocjpeg_api_trace       = {};
+    rocprofiler_buffer_id_t vulkan_api_trace        = {};
     rocprofiler_buffer_id_t pc_sampling_stochastic  = {};
 
     auto as_array() const
     {
-        return std::array<rocprofiler_buffer_id_t, 12>{hsa_api_trace,
+        return std::array<rocprofiler_buffer_id_t, 13>{hsa_api_trace,
                                                        hip_api_trace,
                                                        kernel_trace,
                                                        memory_copy_trace,
@@ -214,6 +215,7 @@ struct buffer_ids
                                                        pc_sampling_host_trap,
                                                        rocdecode_api_trace,
                                                        rocjpeg_api_trace,
+                                                       vulkan_api_trace,
                                                        pc_sampling_stochastic};
     }
     auto pc_sampling_buffers_as_array() const
@@ -1084,7 +1086,14 @@ buffered_tracing_callback(rocprofiler_context_id_t /*context*/,
                 auto* record =
                     static_cast<rocprofiler_buffer_tracing_rocjpeg_api_record_t*>(header->payload);
 
-                tool::write_ring_buffer(*record, domain_type::ROCJPEG);
+                tool::write_ring_buffer(*record, domain_type::VULKAN);
+            }
+            else if(header->kind == ROCPROFILER_BUFFER_TRACING_VULKAN_API)
+            {
+                auto* record =
+                    static_cast<rocprofiler_buffer_tracing_vulkan_api_record_t*>(header->payload);
+
+                tool::write_ring_buffer(*record, domain_type::VULKAN);
             }
             else
             {
@@ -2027,7 +2036,10 @@ tool_init(rocprofiler_client_finalize_t fini_func, void* tool_data)
                                             get_buffers().rocdecode_api_trace},
                       buffer_service_config{tool::get_config().rocjpeg_api_trace,
                                             ROCPROFILER_BUFFER_TRACING_ROCJPEG_API,
-                                            get_buffers().rocjpeg_api_trace}})
+                                            get_buffers().rocjpeg_api_trace},
+                      buffer_service_config{tool::get_config().vulkan_api_trace,
+                                            ROCPROFILER_BUFFER_TRACING_VULKAN_API,
+                                            get_buffers().vulkan_api_trace}})
     {
         if(itr.option)
         {
@@ -2112,6 +2124,9 @@ tool_init(rocprofiler_client_finalize_t fini_func, void* tool_data)
                                               dummy_callback_tracing_callback},
                       callback_service_config{tool::get_config().rocjpeg_api_trace,
                                               ROCPROFILER_CALLBACK_TRACING_ROCJPEG_API,
+                                              dummy_callback_tracing_callback},
+                      callback_service_config{tool::get_config().vulkan_api_trace,
+                                              ROCPROFILER_CALLBACK_TRACING_VULKAN_API,
                                               dummy_callback_tracing_callback}})
     {
         if(itr.option)
@@ -2630,6 +2645,7 @@ generate_output(cleanup_mode _cleanup_mode)
     auto rocjpeg_output = tool::rocjpeg_buffered_output_t{tool::get_config().rocjpeg_api_trace};
     auto pc_sampling_stochastic_output =
         tool::pc_sampling_stochastic_buffered_output_t{tool::get_config().pc_sampling_stochastic};
+    auto vulkan_output = tool::vulkan_api_buffered_output_t{tool::get_config().vulkan_api_trace};
 
     auto node_id_sort  = [](const auto& lhs, const auto& rhs) { return lhs.node_id < rhs.node_id; };
     auto agents_output = CHECK_NOTNULL(tool_metadata)->agents;
@@ -2667,6 +2683,7 @@ generate_output(cleanup_mode _cleanup_mode)
     generate_output(rocdecode_output, outdata, contributions, cleanups);
     generate_output(pc_sampling_host_trap_output, outdata, contributions, cleanups);
     generate_output(rocjpeg_output, outdata, contributions, cleanups);
+    generate_output(vulkan_output, outdata, contributions, cleanups);
     generate_output(pc_sampling_stochastic_output, outdata, contributions, cleanups);
 
     if(tool::get_config().advanced_thread_trace && !tool_metadata->att_filenames.empty())
@@ -2712,6 +2729,7 @@ generate_output(cleanup_mode _cleanup_mode)
                          memory_allocation_output.get_generator(),
                          rocdecode_output.get_generator(),
                          rocjpeg_output.get_generator(),
+                         vulkan_output.get_generator(),
                          pc_sampling_host_trap_output.get_generator(),
                          pc_sampling_stochastic_output.get_generator());
         json_ar.finish_process();
@@ -2735,7 +2753,8 @@ generate_output(cleanup_mode _cleanup_mode)
                              rccl_output.get_generator(),
                              memory_allocation_output.get_generator(),
                              rocdecode_output.get_generator(),
-                             rocjpeg_output.get_generator());
+                             rocjpeg_output.get_generator(),
+                             vulkan_output.get_generator());
     }
 
     if(tool::get_config().rocpd_output && outdata.num_output > 0 &&
