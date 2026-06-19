@@ -391,6 +391,11 @@ For attachment profiling of running processes:
         "--rocjpeg-trace",
         help="For collecting rocJPEG Traces",
     )
+    add_parser_bool_argument(
+        basic_tracing_options,
+        "--vulkan-trace",
+        help="For collecting Vulkan Traces",
+    )
 
     extended_tracing_options = parser.add_argument_group("Granular tracing options")
 
@@ -1237,6 +1242,7 @@ def run(app_args, args, **kwargs):
             "rccl_trace",
             "rocdecode_trace",
             "rocjpeg_trace",
+            "vulkan_trace",
         ):
             setattrifnone(args, itr, True)
 
@@ -1251,6 +1257,7 @@ def run(app_args, args, **kwargs):
             "rccl_trace",
             "rocdecode_trace",
             "rocjpeg_trace",
+            "vulkan_trace",
         ):
             setattrifnone(args, itr, True)
 
@@ -1281,6 +1288,7 @@ def run(app_args, args, **kwargs):
             ["memory_allocation_trace", "MEMORY_ALLOCATION_TRACE"],
             ["scratch_memory_trace", "SCRATCH_MEMORY_TRACE"],
             ["group_by_queue", "GROUP_BY_QUEUE"],
+            ["vulkan_trace", "VULKAN_API_TRACE"],
         ]
     ).items():
         val = getattr(args, f"{opt}")

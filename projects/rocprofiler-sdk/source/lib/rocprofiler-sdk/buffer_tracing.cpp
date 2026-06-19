@@ -38,6 +38,7 @@
 #include "lib/rocprofiler-sdk/rocdecode/rocdecode.hpp"
 #include "lib/rocprofiler-sdk/rocjpeg/rocjpeg.hpp"
 #include "lib/rocprofiler-sdk/runtime_initialization.hpp"
+#include "lib/rocprofiler-sdk/vulkan/vulkan.hpp"
 
 #include <rocprofiler-sdk/buffer_tracing.h>
 #include <rocprofiler-sdk/fwd.h>
@@ -47,6 +48,7 @@
 #include <rocprofiler-sdk/rccl/table_id.h>
 #include <rocprofiler-sdk/rocdecode/table_id.h>
 #include <rocprofiler-sdk/rocjpeg/table_id.h>
+#include <rocprofiler-sdk/vulkan/table_id.h>
 
 #include <atomic>
 #include <limits>
@@ -111,6 +113,7 @@ ROCPROFILER_BUFFER_TRACING_KIND_STRING(KFD_PAGE_MIGRATE)
 ROCPROFILER_BUFFER_TRACING_KIND_STRING(KFD_PAGE_FAULT)
 ROCPROFILER_BUFFER_TRACING_KIND_STRING(KFD_QUEUE)
 ROCPROFILER_BUFFER_TRACING_KIND_STRING(MARKER_CORE_RANGE_API)
+ROCPROFILER_BUFFER_TRACING_KIND_STRING(VULKAN_API)
 
 template <size_t Idx, size_t... Tail>
 std::pair<const char*, size_t>
@@ -340,6 +343,11 @@ rocprofiler_query_buffer_tracing_kind_operation_name(rocprofiler_buffer_tracing_
                 operation);
             break;
         }
+        case ROCPROFILER_BUFFER_TRACING_VULKAN_API:
+        {
+            val = rocprofiler::vulkan::name_by_id<ROCPROFILER_VULKAN_TABLE_ID>(operation);
+            break;
+        }
         case ROCPROFILER_BUFFER_TRACING_KFD_EVENT_PAGE_MIGRATE:
         case ROCPROFILER_BUFFER_TRACING_KFD_EVENT_PAGE_FAULT:
         case ROCPROFILER_BUFFER_TRACING_KFD_EVENT_QUEUE:
@@ -499,6 +507,11 @@ rocprofiler_iterate_buffer_tracing_kind_operations(
         case ROCPROFILER_BUFFER_TRACING_MARKER_CORE_RANGE_API:
         {
             ops = rocprofiler::marker::get_ids<ROCPROFILER_MARKER_TABLE_ID_RoctxCoreRange>();
+            break;
+        }
+        case ROCPROFILER_BUFFER_TRACING_VULKAN_API:
+        {
+            ops = rocprofiler::vulkan::get_ids<ROCPROFILER_VULKAN_TABLE_ID>();
             break;
         }
         case ROCPROFILER_BUFFER_TRACING_KFD_EVENT_PAGE_MIGRATE:
